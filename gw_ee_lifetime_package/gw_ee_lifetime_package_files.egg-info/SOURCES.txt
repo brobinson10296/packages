@@ -1,0 +1,9 @@
+setup.py
+gw_ee_lifetime_package_files/__init__.py
+gw_ee_lifetime_package_files/fermi_liq_fit.py
+gw_ee_lifetime_package_files/freq_dep_self_energy_nk.py
+gw_ee_lifetime_package_files/freq_ind_self_energy.py
+gw_ee_lifetime_package_files.egg-info/PKG-INFO
+gw_ee_lifetime_package_files.egg-info/SOURCES.txt
+gw_ee_lifetime_package_files.egg-info/dependency_links.txt
+gw_ee_lifetime_package_files.egg-info/top_level.txt
