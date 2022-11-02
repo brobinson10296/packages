@@ -46,7 +46,7 @@ def freq_self_energy_df_function(input_file,kn_line_num_array,kn_E_array,NBANDSG
 
     return df
 
-def fermi_liq_fit_function(input_file):
+def freq_dependent_self_energy_function(input_file):
     NBANDSGW = int(find_value_function(input_file,'NBANDSGW=',1))
     E_f = find_value_function(input_file,'E-fermi',-1)
     NKPTS = int(find_value_function(input_file,'NKPTS',3))
