@@ -1,0 +1,5 @@
+setup.py
+fermi_fit.egg-info/PKG-INFO
+fermi_fit.egg-info/SOURCES.txt
+fermi_fit.egg-info/dependency_links.txt
+fermi_fit.egg-info/top_level.txt
