@@ -1,0 +1,5 @@
+setup.py
+freq_dependent_self_energy.egg-info/PKG-INFO
+freq_dependent_self_energy.egg-info/SOURCES.txt
+freq_dependent_self_energy.egg-info/dependency_links.txt
+freq_dependent_self_energy.egg-info/top_level.txt
