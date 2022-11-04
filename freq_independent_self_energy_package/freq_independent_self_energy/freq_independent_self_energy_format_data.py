@@ -1,5 +1,8 @@
 import numpy as np
 import pandas as pd
+from scipy.optimize import curve_fit as curve_fit
+
+hbar = 6.582*(10**(-1)) # eV/fs
 
 def find_value_function(input_file,string,index):
     with open(input_file) as f:
@@ -11,7 +14,7 @@ def freq_self_energy_function(input_file,line_num,NBANDSGW,E_f,NKPTS):
               "V_xc(KS)", "V^pw_x(r,r')", "Z", "occ.", "Im(Sigma)"]
     df = pd.DataFrame()
     for count,i in enumerate(line_num,1):
-        df_i = pd.read_csv(dat_dir+input_file,delim_whitespace=True,
+        df_i = pd.read_csv(input_file,delim_whitespace=True,
                          skiprows=i,nrows=NBANDSGW,names=header)
         k_i = [count]*NBANDSGW
         df_i.insert(1, "k", k_i, True)
@@ -45,5 +48,20 @@ def freq_independent_self_energy_function(input_file):
 
     line_num_list = get_line_num_function(input_file)
 
-    df = freq_self_energy_function(input_file,line_num_list,NBANDSGW)
+    df = freq_self_energy_function(input_file,line_num_list,NBANDSGW,E_f,NKPTS)
     return df
+
+
+################################### for fit ###################################
+def model_quad_function(x,a):
+    return a*x**2
+
+def freq_independent_self_energy_fit_function(df,E_to_fit,E_max=100,disc=0.01):
+    x = df[E_to_fit]
+    y = df['Im(Sigma)']
+
+    pars, cov = curve_fit(f=model_quad_function, xdata=x, ydata=y)
+    fit_x = np.arange(disc,E_max+disc,disc)
+    fit_y = model_quad_function(fit_x,pars[0])
+
+    return pars[0],fit_x, fit_y
