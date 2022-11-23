@@ -1,8 +1,9 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+import operator
 
-def get_spectrum(df_trans_with_occ,t_list,spec_type='avg',volume=56.27,
+def get_spectrum_loc(df_trans_with_occ,t_list,spec_type='avg',trans_type='all',volume=56.27,
                      sigma=0.10,Emax=20.0,Emin=0,Trans_Min=0.0,Trans_Max=20.0,
                      scissor=0,CBM_index=10,VBM_index=9,GRID=10000):
     ######## Constants and Coefficients for Dielectric Function Calc ########
@@ -18,6 +19,24 @@ def get_spectrum(df_trans_with_occ,t_list,spec_type='avg',volume=56.27,
     all_list=[]
     ########################################################
     df=pd.DataFrame()
+
+    #spectrum type
+    print('Analyzing ',trans_type, 'transitions')
+    if trans_type.lower()=='all':
+        condition1,condition2=operator.ge,operator.ge
+        comp_band=0
+    elif trans_type.lower()=='val_con':
+        condition1,condition2=operator.gt,operator.le
+        comp_band=VBM_index
+    elif trans_type.lower()=='val_val':
+        condition1,condition2=operator.le,operator.le
+        comp_band=VBM_index
+    elif trans_type.lower()=='con_con':
+        condition1,condition2=operator.ge,operator.ge
+        comp_band=CBM_index
+    else:
+        print('No type selected! Pick: "all", "val_con", "val_val", or "con_con"')
+
     for t in t_list:
         tot_curve_x = [0]*len(Energy)
         tot_curve_x_real = [0]*len(Energy)
@@ -27,9 +46,15 @@ def get_spectrum(df_trans_with_occ,t_list,spec_type='avg',volume=56.27,
 
         t_zeros = str(t).zfill(len(str(max(t_list))))
         df_t=df_trans_with_occ[df_trans_with_occ['t (fs)']==t_zeros].to_numpy().astype(float)
+        #read through Transmatrix(t) df line by line
         for count,trans_i in enumerate(df_t):
+
+            #check that state energy differences are correct
             if (trans_i[6] > trans_i[7] and trans_i[6]-trans_i[7] >
-                    Trans_Min and trans_i[6]-trans_i[7] < Trans_Max):
+                    Trans_Min and trans_i[6]-trans_i[7] < Trans_Max and
+                    condition1(trans_i[2],comp_band) and
+                    condition2(trans_i[3],comp_band)):
+
                 PX = np.sqrt(trans_i[8]**2+trans_i[9]**2)
                 PY = np.sqrt(trans_i[10]**2+trans_i[11]**2)
                 PZ = np.sqrt(trans_i[12]**2+trans_i[13]**2)
