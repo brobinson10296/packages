@@ -43,3 +43,9 @@ def scatter_function(ax, x, y, plot_label=None,leg_loc=None, plot_color=None, ma
     if plot_label != None:
         ax.legend(loc=leg_loc)
     return ax
+
+def fill_function(ax,x, y,plot_color=None,alpha_value=None, x_bounds=None, y_bounds=None):
+    ax.fill_between(x,y,color=plot_color,alpha=alpha_value)
+    ax.set_xlim(x_bounds)
+    ax.set_ylim(y_bounds)
+    return ax

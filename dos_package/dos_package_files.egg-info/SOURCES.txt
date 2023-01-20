@@ -1,0 +1,5 @@
+setup.py
+dos_package_files.egg-info/PKG-INFO
+dos_package_files.egg-info/SOURCES.txt
+dos_package_files.egg-info/dependency_links.txt
+dos_package_files.egg-info/top_level.txt
