@@ -10,7 +10,9 @@ def mod_exp_function(t, A, tau, t_o, b):
 def exp_fit(calc_dic, E_dist, E):
 
     simulation_time = np.arange(
-        0, calc_dic["boltz_nstep"] + calc_dic["time_step"], calc_dic["time_step"]
+        0,
+        calc_dic["boltz_nstep"] * calc_dic["time_step"] + calc_dic["time_step"],
+        calc_dic["time_step"],
     )
 
     index = np.where(
@@ -32,8 +34,8 @@ def exp_fit(calc_dic, E_dist, E):
     A_constrain = dist_to_fit[0]
     # constrain A to +/- 0.1 and t_o to +/- 1 of value
     bounds = (
-        (A_constrain - 0.1, -np.inf, t_o_constrain - 1, 0),
-        (A_constrain + 0.1, np.inf, t_o_constrain + 1, np.inf),
+        (A_constrain - 1.0, -np.inf, t_o_constrain - 1, 0),
+        (A_constrain + 1.0, np.inf, t_o_constrain + 1, np.inf),
     )
     popt, pcov = curve_fit(
         mod_exp_function,
@@ -49,13 +51,23 @@ def exp_fit(calc_dic, E_dist, E):
     )
     r2 = r2_score(dist_to_fit, y_fitted)
 
-    return E_dist_of_interest, excitation_index, dist_to_fit, y_fitted, popt, r2
+    return (
+        simulation_time,
+        E_dist_of_interest,
+        excitation_index,
+        dist_to_fit,
+        y_fitted,
+        popt,
+        r2,
+    )
 
 
 def get_tau(calc_dic, E_dist, index):
 
     simulation_time = np.arange(
-        0, calc_dic["boltz_nstep"] + calc_dic["time_step"], calc_dic["time_step"]
+        0,
+        calc_dic["boltz_nstep"] * calc_dic["time_step"] + calc_dic["time_step"],
+        calc_dic["time_step"],
     )
 
     E_dist_of_interest = E_dist[:, index]
@@ -66,8 +78,8 @@ def get_tau(calc_dic, E_dist, index):
     A_constrain = dist_to_fit[0]
     # constrain A to +/- 0.1 and t_o to +/- 1 of value
     bounds = (
-        (A_constrain - 0.1, -np.inf, t_o_constrain - 1, 0),
-        (A_constrain + 0.1, np.inf, t_o_constrain + 1, np.inf),
+        (A_constrain - 1.0, -np.inf, t_o_constrain - 1, 0),
+        (A_constrain + 1.0, np.inf, t_o_constrain + 1, np.inf),
     )
     popt, pcov = curve_fit(
         mod_exp_function,

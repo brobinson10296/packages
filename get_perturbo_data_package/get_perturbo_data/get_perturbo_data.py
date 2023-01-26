@@ -29,6 +29,7 @@ def pert_input_param(path):
                 carrier = "Hole"
             else:
                 carrier = "Electron"
+    band_index = np.arange(int(band_min), int(band_max) + 1, 1)
     num_bands = (band_max - band_min) + 1
     bands_list = [n for n in range(num_bands)]
 
@@ -36,6 +37,7 @@ def pert_input_param(path):
         prefix,
         E_min,
         E_max,
+        band_index,
         bands_list,
         time_step,
         boltz_nstep,
@@ -46,7 +48,51 @@ def pert_input_param(path):
     )
 
 
-def read_h5_data_function(h5prefix, boltz_nstep, num_bands, calc_list=["run", "pp"]):
+def get_dos_function(prefix):
+    E_dos = np.loadtxt(prefix + ".dos", skiprows=1)
+    return E_dos
+
+
+def read_h5_data_function(h5prefix, boltz_nstep, calc_list=["run", "pp"]):
+
+    E_dist, E_pop = [], []
+
+    for calc in calc_list:
+        if calc == "run":
+            h5file = h5py.File(h5prefix + "_cdyna.h5", "r")
+            E_dist = []
+            energy_ev = np.array(
+                h5file["band_structure_ryd"][:]
+                * h5file["band_structure_ryd"].attrs["ryd2ev"]
+            ).flatten()
+
+            for tb in range(boltz_nstep + 1):
+                dist_func = np.array(
+                    h5file["dynamics_run_1"]["snap_t_" + str(tb)][:]
+                ).flatten()
+
+                E_dist_tb = np.vstack((energy_ev, dist_func)).T
+                E_dist.append(E_dist_tb[E_dist_tb[:, 0].argsort()])
+            h5file.close()
+
+        elif calc == "pp":
+            h5file = h5py.File(h5prefix + "_popu.h5", "r")
+            for tb in range(boltz_nstep + 1):  # the time is boltz_nstep*time_step
+                E_pop_tb = np.array(
+                    (
+                        h5file["energy_grid_ev"][()],
+                        h5file["energy_distribution"]["popu_t" + str(int(tb))][()],
+                    )
+                ).T
+                E_pop.append(E_pop_tb[np.argsort(E_pop_tb[:, 0])])
+            h5file.close()
+
+    return np.array(E_dist), np.array(E_pop)
+
+
+def read_h5_data_function_old(
+    h5prefix, boltz_nstep, num_bands, calc_list=["run", "pp"]
+):
 
     E_dist, E_pop = [], []
 
@@ -96,6 +142,7 @@ def get_perturbo_data(path):
         prefix,
         E_min,
         E_max,
+        band_index,
         band_list,
         time_step,
         boltz_nstep,
@@ -109,6 +156,7 @@ def get_perturbo_data(path):
         "prefix": prefix,
         "E_min": E_min,
         "E_max": E_max,
+        "band_index": band_index,
         "band_list": band_list,
         "time_step": time_step,
         "boltz_nstep": boltz_nstep,
@@ -118,10 +166,52 @@ def get_perturbo_data(path):
         "carrier": carrier,
     }
 
+    E_dos = get_dos_function(path + prefix)
+
     E_dist, E_pop = read_h5_data_function(
+        path + calc_dic["prefix"],
+        calc_dic["boltz_nstep"],
+        calc_list=["run", "pp"],
+    )
+
+    calc_dic.update({"E_dist": E_dist, "E_pop": E_pop, "E_dos": E_dos})
+    return calc_dic
+
+
+def get_perturbo_data_old(path):
+    (
+        prefix,
+        E_min,
+        E_max,
+        band_index,
+        band_list,
+        time_step,
+        boltz_nstep,
+        boltz_init_e0,
+        Ef,
+        k_grid,
+        carrier,
+    ) = pert_input_param(path)
+
+    calc_dic = {
+        "prefix": prefix,
+        "E_min": E_min,
+        "E_max": E_max,
+        "band_index": band_index,
+        "band_list": band_list,
+        "time_step": time_step,
+        "boltz_nstep": boltz_nstep,
+        "boltz_init_e0": boltz_init_e0,
+        "Ef": Ef,
+        "k_grid": k_grid,
+        "carrier": carrier,
+    }
+
+    E_dist, E_pop = read_h5_data_function_old(
         path + calc_dic["prefix"],
         calc_dic["boltz_nstep"],
         len(calc_dic["band_list"]),
         calc_list=["run", "pp"],
     )
+
     return calc_dic, E_dist, E_pop
