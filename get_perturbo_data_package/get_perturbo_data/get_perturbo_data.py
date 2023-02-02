@@ -6,6 +6,7 @@ from scipy import interpolate
 
 # reads input parameters from pert_run.in file
 def pert_input_param(path):
+    Ef = None  # set if just a guassian calc
     with open(path + "pert_pp.in", "r") as file:
         for line in file:
             if "prefix" in line:
@@ -83,9 +84,11 @@ def read_h5_data_function(h5prefix, boltz_nstep, E_min, E_max, calc_list=["run",
                 E_dist_tb = np.vstack((energy_ev, dist_func)).T
                 E_dist.append(E_dist_tb[E_dist_tb[:, 0].argsort()])
 
-                interp_dis_func = interpolate.interp1d(energy_ev, dist_func)
                 disc = 0.001
                 interp_E = np.arange(E_min, E_max + disc, disc)
+                interp_dis_func = interpolate.interp1d(
+                    energy_ev, dist_func, fill_value="extrapolate"
+                )
                 interp_dis = interp_dis_func(interp_E)
                 interp_E_tb = np.vstack((interp_E, interp_dis)).T
                 interp_E_dist.append(interp_E_tb)
