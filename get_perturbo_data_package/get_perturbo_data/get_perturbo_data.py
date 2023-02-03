@@ -63,14 +63,13 @@ def get_dos_function(prefix):
 
 
 def read_h5_data_function(
-    h5prefix, boltz_nstep, time_step, E_min, E_max, chunk=None, calc_list=["run", "pp"]
+    h5prefix, boltz_nstep, time_step, E_min, E_max, chunk, calc_list=["run", "pp"]
 ):
 
     if chunk == None and time_step >= 1:
         chunk = 1
     elif chunk == None and time_step < 1:
         chunk = int(1 / time_step)
-    print(chunk)
 
     E_dist, E_pop = [], []
     interp_E_dist, interp_E_pop = [], []
@@ -117,10 +116,10 @@ def read_h5_data_function(
                     E_pop.append(E_pop_tb[np.argsort(E_pop_tb[:, 0])])
             h5file.close()
 
-    return np.array(E_dist), np.array(interp_E_dist), np.array(E_pop)
+    return np.array(E_dist), np.array(interp_E_dist), np.array(E_pop), chunk
 
 
-def get_perturbo_data(path):
+def get_perturbo_data(path, chunk=None):
     (
         prefix,
         E_min,
@@ -152,12 +151,13 @@ def get_perturbo_data(path):
     E_dos = get_dos_function(path + prefix)
     t_cc = get_cc_function(path + prefix)
 
-    E_dist, interp_E_dist, E_pop = read_h5_data_function(
+    E_dist, interp_E_dist, E_pop, chunk = read_h5_data_function(
         path + calc_dic["prefix"],
         calc_dic["boltz_nstep"],
         calc_dic["time_step"],
         calc_dic["E_min"],
         calc_dic["E_max"],
+        chunk=chunk,
         calc_list=["run", "pp"],
     )
 
@@ -168,6 +168,7 @@ def get_perturbo_data(path):
             "E_pop": E_pop,
             "t_cc": t_cc,
             "E_dos": E_dos,
+            "chunk": chunk,
         }
     )
     return calc_dic
