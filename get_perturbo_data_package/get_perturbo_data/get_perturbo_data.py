@@ -62,7 +62,15 @@ def get_dos_function(prefix):
     return E_dos
 
 
-def read_h5_data_function(h5prefix, boltz_nstep, E_min, E_max, calc_list=["run", "pp"]):
+def read_h5_data_function(
+    h5prefix, boltz_nstep, time_step, E_min, E_max, chunk=None, calc_list=["run", "pp"]
+):
+
+    if chunk == None and time_step >= 1:
+        chunk = 1
+    elif chunk == None and time_step < 1:
+        chunk = int(1 / time_step)
+    print(chunk)
 
     E_dist, E_pop = [], []
     interp_E_dist, interp_E_pop = [], []
@@ -77,34 +85,36 @@ def read_h5_data_function(h5prefix, boltz_nstep, E_min, E_max, calc_list=["run",
             ).flatten()
 
             for tb in range(boltz_nstep + 1):
-                dist_func = np.array(
-                    h5file["dynamics_run_1"]["snap_t_" + str(tb)][:]
-                ).flatten()
+                if tb % chunk == 0:  # implementted for help reduce memory isues
+                    dist_func = np.array(
+                        h5file["dynamics_run_1"]["snap_t_" + str(tb)][:]
+                    ).flatten()
 
-                E_dist_tb = np.vstack((energy_ev, dist_func)).T
-                E_dist.append(E_dist_tb[E_dist_tb[:, 0].argsort()])
+                    E_dist_tb = np.vstack((energy_ev, dist_func)).T
+                    E_dist.append(E_dist_tb[E_dist_tb[:, 0].argsort()])
 
-                disc = 0.001
-                interp_E = np.arange(E_min, E_max + disc, disc)
-                interp_dis_func = interpolate.interp1d(
-                    energy_ev, dist_func, fill_value="extrapolate"
-                )
-                interp_dis = interp_dis_func(interp_E)
-                interp_E_tb = np.vstack((interp_E, interp_dis)).T
-                interp_E_dist.append(interp_E_tb)
+                    disc = 0.001
+                    interp_E = np.arange(E_min, E_max + disc, disc)
+                    interp_dis_func = interpolate.interp1d(
+                        energy_ev, dist_func, fill_value="extrapolate"
+                    )
+                    interp_dis = interp_dis_func(interp_E)
+                    interp_E_tb = np.vstack((interp_E, interp_dis)).T
+                    interp_E_dist.append(interp_E_tb)
 
             h5file.close()
 
         elif calc == "pp":
             h5file = h5py.File(h5prefix + "_popu.h5", "r")
             for tb in range(boltz_nstep + 1):  # the time is boltz_nstep*time_step
-                E_pop_tb = np.array(
-                    (
-                        h5file["energy_grid_ev"][()],
-                        h5file["energy_distribution"]["popu_t" + str(int(tb))][()],
-                    )
-                ).T
-                E_pop.append(E_pop_tb[np.argsort(E_pop_tb[:, 0])])
+                if tb % chunk == 0:  # implementted for help reduce memory isues
+                    E_pop_tb = np.array(
+                        (
+                            h5file["energy_grid_ev"][()],
+                            h5file["energy_distribution"]["popu_t" + str(int(tb))][()],
+                        )
+                    ).T
+                    E_pop.append(E_pop_tb[np.argsort(E_pop_tb[:, 0])])
             h5file.close()
 
     return np.array(E_dist), np.array(interp_E_dist), np.array(E_pop)
@@ -145,6 +155,7 @@ def get_perturbo_data(path):
     E_dist, interp_E_dist, E_pop = read_h5_data_function(
         path + calc_dic["prefix"],
         calc_dic["boltz_nstep"],
+        calc_dic["time_step"],
         calc_dic["E_min"],
         calc_dic["E_max"],
         calc_list=["run", "pp"],

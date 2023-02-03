@@ -1,8 +1,8 @@
 import numpy as np
 
 # reads input parameters from pert_run.in file
-def pert_input_param(path):
-    with open(path + "pert_bands.out", "r") as file:
+def pert_input_param(path, file_name):
+    with open(path + file_name + ".out", "r") as file:
         for line in file:
             if "band_min:" in line:
                 band_min = int(line.split()[1])
@@ -27,12 +27,13 @@ def get_k_label(prefix, path, num_points):
     return sorted(list(set(k_xmap_list)))
 
 
-def get_bands_dic(prefix, path):
-    num_bands = pert_input_param(path)
+def get_bands_dic(prefix=None, file_name="pert", path=None):
+    num_bands = pert_input_param(path, file_name)
     flat_E = np.loadtxt(path + prefix + ".bands", usecols=(4))
     E = np.reshape(flat_E, (num_bands, int(len(flat_E) / num_bands)))
     flat_k = np.loadtxt(path + prefix + ".bands", usecols=(0))
     k = np.reshape(flat_k, (num_bands, int(len(flat_k) / num_bands))).T[:, 0]
     k_xmap_list = get_k_label(prefix, path, len(k))
     bands_dic = {"k": k, "n": E, "k_map": k_xmap_list}
+
     return bands_dic
