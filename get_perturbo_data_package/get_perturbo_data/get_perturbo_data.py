@@ -7,7 +7,7 @@ from scipy import interpolate
 # reads input parameters from pert_run.in file
 def pert_input_param(path):
     Ef = None  # set if just a guassian calc
-    with open(path + "pert_pp.in", "r") as file:
+    with open(path + "pert_run.in", "r") as file:
         for line in file:
             if "prefix" in line:
                 prefix = line.split()[2].replace("'", "")
