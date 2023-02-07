@@ -4,6 +4,11 @@ import scipy
 from scipy import interpolate
 
 
+def get_h5_path(path):
+    file = open(path + "README", "r").readline().split()
+    return file[-2] + " " + file[-1]
+
+
 # reads input parameters from pert_run.in file
 def pert_input_param(path):
     Ef = None  # set if just a guassian calc
@@ -120,6 +125,7 @@ def read_h5_data_function(
 
 
 def get_perturbo_data(path, chunk=None):
+    h5_path = get_h5_path(path)
     (
         prefix,
         E_min,
@@ -132,7 +138,7 @@ def get_perturbo_data(path, chunk=None):
         Ef,
         k_grid,
         carrier,
-    ) = pert_input_param(path)
+    ) = pert_input_param(h5_path)
 
     calc_dic = {
         "prefix": prefix,
@@ -152,7 +158,7 @@ def get_perturbo_data(path, chunk=None):
     t_cc = get_cc_function(path + prefix)
 
     E_dist, interp_E_dist, E_pop, chunk = read_h5_data_function(
-        path + calc_dic["prefix"],
+        h5_path + calc_dic["prefix"],
         calc_dic["boltz_nstep"],
         calc_dic["time_step"],
         calc_dic["E_min"],
@@ -169,6 +175,7 @@ def get_perturbo_data(path, chunk=None):
             "t_cc": t_cc,
             "E_dos": E_dos,
             "chunk": chunk,
+            "h5_path": h5_path,
         }
     )
     return calc_dic
